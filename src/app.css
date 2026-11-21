@@ -1,0 +1,56 @@
+/* App layer. Everything visual comes from the Nocturne tokens in styles.css;
+   this file only holds what the design system does not: the page ground, the
+   two shared column widths, and the hover states the prototype expressed
+   inline. No media queries — every layout wraps or auto-fits. */
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+input[type='checkbox'] {
+  accent-color: #9184d9;
+}
+
+.page {
+  min-height: 100vh;
+  padding-bottom: 80px;
+  background: radial-gradient(120% 80% at 15% -10%, #1d2033 0%, var(--color-bg) 55%);
+}
+
+/* The dashboard content column. */
+.col {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 32px);
+}
+
+/* The first-run column. */
+.col-narrow {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: clamp(28px, 8vh, 90px) clamp(16px, 4vw, 32px);
+}
+
+/* Service row — the background comes from --row-bg (overdue rows carry a wash),
+   and hover paints over it. */
+.svc-row {
+  background: var(--row-bg, transparent);
+}
+.svc-row:hover {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+.group-head:hover {
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+}
+
+.garage-row:hover {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+/* Tag-shaped buttons: filter chips and timeline pills. */
+.tag-btn {
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+}

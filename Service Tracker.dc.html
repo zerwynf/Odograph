@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-3b732290-971a-4e49-a324-ad591006d2ba/styles.css">
+<script src="_ds/nocturne-3b732290-971a-4e49-a324-ad591006d2ba/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+  body { -webkit-font-smoothing: antialiased; }
+  input[type="checkbox"] { accent-color: #9184d9; }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(120% 80% at 15% -10%, #1d2033 0%, var(--color-bg) 55%);padding-bottom:80px">
+
+  <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:620px;margin:0 auto;padding:clamp(28px,8vh,90px) clamp(16px,4vw,32px)">
+      <div style="display:flex;align-items:center;gap:10px;color:var(--color-accent);font-size:13px;letter-spacing:.12em;text-transform:uppercase">
+        <i class="ph ph-gauge" style="font-size:18px"></i>ODOGRAPH
+      </div>
+      <h1 style="margin:14px 0 8px;font-size:clamp(30px,6vw,44px)">Every service your car is owed, mapped to 200,000 miles.</h1>
+      <p class="text-muted" style="font-size:15px;max-width:44ch">Pick your vehicle, tell us the odometer, and we build the manufacturer schedule around where you actually are — what you've missed, what's due, and what's next.</p>
+
+      <div class="card elev-sm" style="margin-top:26px;gap:var(--space-4);padding:var(--space-6)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-4)">
+          <div class="field"><label>Year</label>
+            <select class="input" value="{{ f.year }}" onChange="{{ setYear }}">
+              <sc-for list="{{ years }}" as="y" hint-placeholder-count="3"><option value="{{ y }}">{{ y }}</option></sc-for>
+            </select>
+          </div>
+          <div class="field"><label>Make</label>
+            <select class="input" value="{{ f.make }}" onChange="{{ setMake }}">
+              <sc-for list="{{ makes }}" as="m" hint-placeholder-count="3"><option value="{{ m }}">{{ m }}</option></sc-for>
+            </select>
+          </div>
+          <div class="field"><label>Model</label>
+            <select class="input" value="{{ f.model }}" onChange="{{ setModel }}">
+              <sc-for list="{{ models }}" as="m" hint-placeholder-count="3"><option value="{{ m }}">{{ m }}</option></sc-for>
+            </select>
+          </div>
+          <div class="field"><label>Engine</label>
+            <select class="input" value="{{ f.engine }}" onChange="{{ setEngine }}">
+              <sc-for list="{{ engines }}" as="e" hint-placeholder-count="3"><option value="{{ e }}">{{ e }}</option></sc-for>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-4)">
+          <div class="field"><label>Current odometer</label>
+            <input class="input" inputmode="numeric" placeholder="80,000" value="{{ f.miles }}" onChange="{{ setFMiles }}">
+          </div>
+          <div class="field"><label>Nickname (optional)</label>
+            <input class="input" placeholder="Daily driver" value="{{ f.nickname }}" onChange="{{ setNick }}">
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;margin-top:var(--space-2)">
+          <button class="btn btn-primary" onClick="{{ createVehicle }}"><i class="ph ph-arrow-right"></i>Build my schedule</button>
+          <button class="btn btn-ghost" onClick="{{ loadDemo }}">Load the demo 2018 Accord</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ ready }}" hint-placeholder-val="{{ true }}">
+  <div>
+    <div class="nav" style="max-width:1180px;margin:0 auto;padding:var(--space-4) clamp(16px,4vw,32px);flex-wrap:wrap;row-gap:var(--space-3)">
+      <div class="nav-brand" style="display:flex;align-items:center;gap:8px;margin-right:auto">
+        <i class="ph ph-gauge" style="color:var(--color-accent)"></i>Odograph
+      </div>
+      <button class="btn btn-secondary" onClick="{{ openGarage }}">
+        <i class="ph ph-car-profile"></i>{{ v.label }}<i class="ph ph-caret-down" style="opacity:.6"></i>
+      </button>
+      <button class="btn btn-secondary" onClick="{{ openCustom }}"><i class="ph ph-plus"></i>Log a service</button>
+      <button class="btn btn-primary" onClick="{{ save }}"><i class="ph ph-check-circle"></i>{{ saveLabel }}</button>
+    </div>
+
+    <div style="max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,32px)">
+
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--space-6) var(--space-8);margin:var(--space-4) 0 var(--space-8)">
+        <div style="min-width:260px">
+          <div class="text-muted" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase">{{ v.sub }}</div>
+          <h1 style="font-size:clamp(26px,4.4vw,40px);margin:6px 0 0">{{ v.title }}</h1>
+        </div>
+        <div class="field" style="width:180px">
+          <label>Odometer (mi)</label>
+          <input class="input" inputmode="numeric" value="{{ milesInput }}" onChange="{{ setMiles }}" style="font-size:18px;min-height:42px">
+        </div>
+        <div style="flex:1 1 220px;min-width:200px">
+          <div style="display:flex;justify-content:space-between;font-size:12px" class="text-muted">
+            <span>0</span><span>{{ pctLabel }} of the 200k plan</span><span>200k</span>
+          </div>
+          <div style="height:6px;border-radius:99px;background:var(--color-neutral-900);margin-top:6px;overflow:hidden">
+            <div style="height:100%;background:linear-gradient(90deg,var(--color-accent-700),var(--color-accent));width:{{ pct }}%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--space-3)">
+        <div class="card elev-sm" style="border-left:2px solid var(--color-accent);padding:var(--space-3) var(--space-4);gap:var(--space-1)">
+          <div class="card-kicker">Overdue</div>
+          <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:22px;font-family:var(--font-heading)">{{ s.overCount }}</span><span class="text-muted" style="font-size:12px">services · {{ s.overCost }}</span></div>
+        </div>
+        <div class="card elev-sm" style="padding:var(--space-3) var(--space-4);gap:var(--space-1)">
+          <div class="card-kicker">Due within 3,000 mi</div>
+          <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:22px;font-family:var(--font-heading)">{{ s.dueCount }}</span><span class="text-muted" style="font-size:12px">services · {{ s.dueCost }}</span></div>
+        </div>
+        <div class="card elev-sm" style="padding:var(--space-3) var(--space-4);gap:var(--space-1)">
+          <div class="card-kicker">Next milestone</div>
+          <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:22px;font-family:var(--font-heading)">{{ s.nextMile }}</span><span class="text-muted" style="font-size:12px">mi · {{ s.nextIn }}</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:center;margin:var(--space-6) 0 var(--space-4)">
+        <div class="seg">
+          <label class="seg-opt"><input type="radio" name="view" checked="{{ isDash }}" onChange="{{ viewDash }}"><i class="ph ph-squares-four"></i>Dashboard</label>
+          <label class="seg-opt"><input type="radio" name="view" checked="{{ isTime }}" onChange="{{ viewTime }}"><i class="ph ph-git-commit"></i>Timeline</label>
+          <label class="seg-opt"><input type="radio" name="view" checked="{{ isLog }}" onChange="{{ viewLog }}"><i class="ph ph-list-checks"></i>Service log</label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-left:auto">
+          <sc-for list="{{ filters }}" as="fl" hint-placeholder-count="4">
+            <button class="tag {{ fl.cls }}" onClick="{{ fl.pick }}" style="border:1px solid transparent;cursor:pointer;font-family:var(--font-body)">{{ fl.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{ isDash }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <sc-if value="{{ hasAttention }}" hint-placeholder-val="{{ true }}">
+          <div class="card elev-md" style="padding:var(--space-6);gap:var(--space-4);margin-bottom:var(--space-8)">
+            <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center">
+              <h4 style="margin:0"><i class="ph ph-warning-circle" style="color:var(--color-accent);margin-right:6px"></i>Needs attention now</h4>
+              <span class="text-muted" style="font-size:13px">{{ s.attnLabel }}</span>
+              <button class="btn btn-primary" style="margin-left:auto" onClick="{{ markAttention }}"><i class="ph ph-checks"></i>Mark all complete</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ attention }}" as="it" hint-placeholder-count="3">
+                <label style="display:grid;grid-template-columns:auto 1fr;gap:var(--space-4);align-items:start;padding:var(--space-3);border-radius:var(--radius-md);cursor:pointer;background:{{ it.rowBg }}" style-hover="background:color-mix(in srgb, var(--color-text) 6%, transparent)">
+                  <input type="checkbox" checked="{{ it.done }}" onChange="{{ it.toggle }}" style="width:18px;height:18px;margin-top:3px;cursor:pointer">
+                  <div style="display:flex;flex-wrap:wrap;gap:4px var(--space-4);align-items:baseline">
+                    <div style="flex:1 1 240px">
+                      <div style="font-size:15px;font-family:var(--font-heading)">{{ it.name }}</div>
+                      <div class="text-muted" style="font-size:12px">{{ it.note }}</div>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                      <span class="tag {{ it.tagCls }}">{{ it.statusLabel }}</span>
+                      <span class="tag tag-neutral">{{ it.mileLabel }}</span>
+                      <span class="text-muted" style="font-size:12px">{{ it.costLabel }} · {{ it.diy }}</span>
+                    </div>
+                  </div>
+                </label>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;align-items:baseline;gap:var(--space-4);margin-bottom:var(--space-3)">
+          <h4 style="margin:0">Mileage plan</h4>
+          <span class="text-muted" style="font-size:12px">{{ groupsLabel }}</span>
+          <button class="btn btn-ghost" style="margin-left:auto" onClick="{{ toggleAll }}">{{ expandLabel }}</button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+          <sc-for list="{{ groups }}" as="g" hint-placeholder-count="5">
+            <div class="card" style="padding:0;gap:0;background:{{ g.bg }};box-shadow:var(--shadow-sm);overflow:hidden">
+              <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;padding:var(--space-4) var(--space-6);cursor:pointer;border-left:2px solid {{ g.mark }}" onClick="{{ g.toggle }}" style-hover="background:color-mix(in srgb, var(--color-text) 4%, transparent)">
+                <i class="ph {{ g.caret }}" style="opacity:.55"></i>
+                <div style="font-family:var(--font-heading);font-size:19px;min-width:92px;color:{{ g.mileColor }}">{{ g.mileLabel }}</div>
+                <sc-if value="{{ g.done }}" hint-placeholder-val="{{ false }}">
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--color-accent-300)">
+                    <i class="ph ph-check-circle" style="font-size:16px;color:var(--color-accent)"></i>All done
+                  </span>
+                </sc-if>
+                <sc-if value="{{ g.notDone }}" hint-placeholder-val="{{ true }}">
+                  <span class="tag {{ g.tagCls }}">{{ g.statusLabel }}</span>
+                </sc-if>
+                <span class="text-muted" style="font-size:13px">{{ g.summary }}</span>
+                <div style="display:flex;gap:var(--space-3);align-items:center;margin-left:auto">
+                  <span class="text-muted" style="font-size:13px">{{ g.costLabel }}</span>
+                  <button class="btn btn-secondary" onClick="{{ g.markAll }}"><i class="ph ph-checks"></i>{{ g.markLabel }}</button>
+                </div>
+              </div>
+              <sc-if value="{{ g.open }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:2px;padding:0 var(--space-6) var(--space-4) 40px">
+                  <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="2">
+                    <label style="display:grid;grid-template-columns:auto 1fr;gap:var(--space-4);align-items:start;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);cursor:pointer" style-hover="background:color-mix(in srgb, var(--color-text) 6%, transparent)">
+                      <input type="checkbox" checked="{{ it.done }}" onChange="{{ it.toggle }}" style="width:17px;height:17px;margin-top:3px;cursor:pointer">
+                      <div style="display:flex;flex-wrap:wrap;gap:2px var(--space-4);align-items:baseline;opacity:{{ it.op }}">
+                        <div style="flex:1 1 240px">
+                          <div style="font-size:14.5px;text-decoration:{{ it.deco }}">{{ it.name }}</div>
+                          <div class="text-muted" style="font-size:12px">{{ it.note }}</div>
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                          <span class="tag {{ it.tagCls }}">{{ it.statusLabel }}</span>
+                          <span class="text-muted" style="font-size:12px">{{ it.costLabel }} · {{ it.diy }}</span>
+                        </div>
+                      </div>
+                    </label>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isTime }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:var(--space-4) 0">
+          <sc-for list="{{ nodes }}" as="n" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:96px 1fr;gap:var(--space-6);align-items:start">
+              <div style="text-align:right;font-family:var(--font-heading);font-size:15px;padding-top:10px;color:{{ n.color }}">{{ n.mileLabel }}</div>
+              <div style="border-left:1px solid var(--color-divider);padding:0 0 var(--space-6) var(--space-6);position:relative">
+                <div style="position:absolute;left:-5px;top:14px;width:9px;height:9px;border-radius:50%;background:{{ n.dot }};box-shadow:0 0 0 3px var(--color-bg)"></div>
+                <sc-if value="{{ n.now }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:10px;padding:var(--space-2) 0 var(--space-4)">
+                    <span class="tag tag-outline">You are here — {{ milesLabel }} mi</span>
+                    <div style="flex:1;height:1px;background:linear-gradient(to right,var(--color-accent),transparent)"></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ n.isGroup }}" hint-placeholder-val="{{ true }}">
+                  <div style="padding:var(--space-2) 0">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
+                      <span class="tag {{ n.tagCls }}">{{ n.statusLabel }}</span>
+                      <span class="text-muted" style="font-size:12px">{{ n.costLabel }}</span>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px">
+                      <sc-for list="{{ n.items }}" as="it" hint-placeholder-count="2">
+                        <button class="tag tag-neutral" onClick="{{ it.toggle }}" style="cursor:pointer;border:1px solid transparent;font-family:var(--font-body);opacity:{{ it.op }};text-decoration:{{ it.deco }}">{{ it.name }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isLog }}" hint-placeholder-val="{{ false }}">
+        <div class="card elev-sm" style="padding:var(--space-4) 0;overflow-x:auto">
+          <table class="table" style="min-width:620px">
+            <thead><tr><th>Mileage</th><th>Service</th><th>Source</th><th>Cost est.</th><th></th></tr></thead>
+            <tbody>
+              <sc-for list="{{ logRows }}" as="r" hint-placeholder-count="6">
+                <tr>
+                  <td style="font-family:var(--font-heading);white-space:nowrap">{{ r.mileLabel }}</td>
+                  <td>{{ r.name }}<div class="text-muted" style="font-size:12px">{{ r.note }}</div></td>
+                  <td><span class="tag {{ r.srcCls }}">{{ r.src }}</span></td>
+                  <td class="text-muted" style="white-space:nowrap">{{ r.costLabel }}</td>
+                  <td style="text-align:right"><button class="btn btn-ghost" onClick="{{ r.undo }}">{{ r.undoLabel }}</button></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ showCustom }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop">
+      <div class="dialog">
+        <div class="dialog-title">Log a custom service</div>
+        <div class="dialog-body">Anything you did that isn't on the factory schedule — a repair, an upgrade, an early fluid change.</div>
+        <div class="field"><label>What did you do?</label><input class="input" placeholder="Rear caliper rebuild" value="{{ c.name }}" onChange="{{ setCName }}"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--space-3)">
+          <div class="field"><label>At mileage</label><input class="input" inputmode="numeric" value="{{ c.mileage }}" onChange="{{ setCMiles }}"></div>
+          <div class="field"><label>Cost</label><input class="input" placeholder="180" value="{{ c.cost }}" onChange="{{ setCCost }}"></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea class="input" placeholder="Parts, fluids, who did the work" value="{{ c.note }}" onChange="{{ setCNote }}"></textarea></div>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" onClick="{{ closeDialog }}">Cancel</button>
+          <button class="btn btn-primary" onClick="{{ addCustom }}"><i class="ph ph-plus"></i>Add to log</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showGarage }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop">
+      <div class="dialog" style="width:min(520px,100%)">
+        <div class="dialog-title">Your garage</div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+          <sc-for list="{{ garage }}" as="g" hint-placeholder-count="2">
+            <div style="display:flex;gap:var(--space-3);align-items:center;padding:var(--space-3);border-radius:var(--radius-md);cursor:pointer;box-shadow:inset 0 0 0 1px {{ g.ring }}" onClick="{{ g.pick }}" style-hover="background:color-mix(in srgb, var(--color-text) 6%, transparent)">
+              <i class="ph ph-car-profile" style="font-size:22px;color:{{ g.icon }}"></i>
+              <div style="flex:1">
+                <div style="font-family:var(--font-heading);font-size:15px">{{ g.title }}</div>
+                <div class="text-muted" style="font-size:12px">{{ g.sub }}</div>
+              </div>
+              <span class="tag {{ g.tagCls }}">{{ g.tag }}</span>
+              <button class="btn btn-icon btn-secondary" onClick="{{ g.remove }}"><i class="ph ph-trash"></i></button>
+            </div>
+          </sc-for>
+        </div>
+        <div class="hr"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--space-3)">
+          <div class="field"><label>Year</label>
+            <select class="input" value="{{ f.year }}" onChange="{{ setYear }}">
+              <sc-for list="{{ years }}" as="y" hint-placeholder-count="3"><option value="{{ y }}">{{ y }}</option></sc-for>
+            </select>
+          </div>
+          <div class="field"><label>Make</label>
+            <select class="input" value="{{ f.make }}" onChange="{{ setMake }}">
+              <sc-for list="{{ makes }}" as="m" hint-placeholder-count="3"><option value="{{ m }}">{{ m }}</option></sc-for>
+            </select>
+          </div>
+          <div class="field"><label>Model</label>
+            <select class="input" value="{{ f.model }}" onChange="{{ setModel }}">
+              <sc-for list="{{ models }}" as="m" hint-placeholder-count="3"><option value="{{ m }}">{{ m }}</option></sc-for>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--space-3)">
+          <div class="field"><label>Engine</label>
+            <select class="input" value="{{ f.engine }}" onChange="{{ setEngine }}">
+              <sc-for list="{{ engines }}" as="e" hint-placeholder-count="3"><option value="{{ e }}">{{ e }}</option></sc-for>
+            </select>
+          </div>
+          <div class="field"><label>Odometer</label><input class="input" inputmode="numeric" value="{{ f.miles }}" onChange="{{ setFMiles }}"></div>
+        </div>
+        <div class="dialog-actions">
+          <button class="btn btn-ghost" onClick="{{ resetAll }}">Clear all data</button>
+          <button class="btn btn-secondary" onClick="{{ closeDialog }}">Close</button>
+          <button class="btn btn-primary" onClick="{{ createVehicle }}"><i class="ph ph-plus"></i>Add vehicle</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dueWindow&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3000,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:500,&quot;max&quot;:10000,&quot;step&quot;:500,&quot;unit&quot;:&quot;mi&quot;,&quot;section&quot;:&quot;Schedule&quot;},&quot;horizon&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:200000,&quot;tsType&quot;:&quot;number&quot;,&quot;options&quot;:[100000,150000,200000,250000],&quot;section&quot;:&quot;Schedule&quot;}}">
+class Component extends DCLogic {
+  static CATALOG = {
+    Honda: { Accord: ['1.5L Turbo (gas)', '2.0L Turbo (gas)', '2.0L Hybrid'], Civic: ['2.0L (gas)', '1.5L Turbo (gas)'], 'CR-V': ['1.5L Turbo (gas)', '2.0L Hybrid'] },
+    Toyota: { Camry: ['2.5L (gas)', '2.5L Hybrid'], Corolla: ['1.8L (gas)', '2.0L (gas)'], RAV4: ['2.5L (gas)', '2.5L Hybrid'] },
+    Ford: { 'F-150': ['5.0L V8 (gas)', '2.7L EcoBoost (gas)'], Escape: ['1.5L EcoBoost (gas)'] },
+    Subaru: { Outback: ['2.5L (gas)', '2.4L Turbo (gas)'], Forester: ['2.5L (gas)'] },
+    Mazda: { Mazda3: ['2.5L (gas)'], 'CX-5': ['2.5L (gas)', '2.5L Turbo (gas)'] }
+  };
+
+  static SCHED = {
+    'Honda|Accord|1.5L Turbo (gas)': [
+      { id: 'oil', name: 'Engine oil & filter', every: 7500, cost: [45, 95], diy: 'Easy', note: '0W-20 full synthetic, 3.7 qt' },
+      { id: 'rot', name: 'Tire rotation', every: 7500, cost: [0, 30], diy: 'Easy', note: 'Torque to 80 lb-ft' },
+      { id: 'insp', name: 'Multi-point inspection', every: 15000, cost: [0, 40], diy: 'Easy', note: 'Brakes, hoses, suspension, fluid levels' },
+      { id: 'cab', name: 'Dust & pollen filter', every: 15000, cost: [18, 45], diy: 'Easy', note: 'Behind the glovebox, 5 minutes' },
+      { id: 'air', name: 'Engine air cleaner element', every: 30000, cost: [25, 60], diy: 'Easy' },
+      { id: 'cvt', name: 'CVT fluid', every: 30000, cost: [120, 200], diy: 'Medium', note: 'Honda HCF-2 only — no substitutes' },
+      { id: 'bf', name: 'Brake fluid', every: 45000, cost: [90, 150], diy: 'Medium', note: 'Or every 3 years, whichever comes first' },
+      { id: 'pads', name: 'Brake pads & rotors', every: 50000, cost: [300, 650], diy: 'Medium', note: 'Interval varies with driving style' },
+      { id: 'tire', name: 'Tires — replace set', every: 50000, cost: [600, 900], diy: 'Hard' },
+      { id: 'belt', name: 'Drive belt inspection', every: 60000, cost: [0, 40], diy: 'Medium' },
+      { id: 'batt', name: '12V battery', every: 60000, cost: [150, 250], diy: 'Easy' },
+      { id: 'ac', name: 'A/C system service', every: 75000, cost: [120, 250], diy: 'Medium', note: 'Refrigerant charge and cabin airflow check' },
+      { id: 'cool', name: 'Engine coolant', first: 100000, every: 50000, cost: [110, 180], diy: 'Medium', note: 'Honda Type 2, pre-mixed' },
+      { id: 'plug', name: 'Spark plugs', every: 100000, cost: [180, 320], diy: 'Hard', note: 'Iridium, 1.5L turbo' },
+      { id: 'valve', name: 'Valve clearance inspection', every: 100000, cost: [250, 450], diy: 'Hard', note: 'Adjust if noisy' }
+    ],
+    'Toyota|RAV4|2.5L (gas)': [
+      { id: 'oil', name: 'Engine oil & filter', every: 10000, cost: [50, 100], diy: 'Easy', note: '0W-16 or 0W-20, 4.8 qt' },
+      { id: 'rot', name: 'Tire rotation', every: 5000, cost: [0, 30], diy: 'Easy' },
+      { id: 'insp', name: 'Multi-point inspection', every: 15000, cost: [0, 40], diy: 'Easy' },
+      { id: 'cab', name: 'Cabin air filter', every: 15000, cost: [18, 45], diy: 'Easy' },
+      { id: 'air', name: 'Engine air filter', every: 30000, cost: [25, 60], diy: 'Easy' },
+      { id: 'bf', name: 'Brake fluid', every: 60000, cost: [90, 150], diy: 'Medium' },
+      { id: 'atf', name: 'Automatic transmission fluid', every: 60000, cost: [180, 320], diy: 'Hard', note: 'Toyota WS' },
+      { id: 'pads', name: 'Brake pads & rotors', every: 50000, cost: [300, 650], diy: 'Medium' },
+      { id: 'tire', name: 'Tires — replace set', every: 50000, cost: [650, 1000], diy: 'Hard' },
+      { id: 'batt', name: '12V battery', every: 60000, cost: [150, 250], diy: 'Easy' },
+      { id: 'cool', name: 'Engine coolant', first: 100000, every: 50000, cost: [110, 180], diy: 'Medium' },
+      { id: 'plug', name: 'Spark plugs', every: 120000, cost: [160, 300], diy: 'Medium' }
+    ],
+    generic: [
+      { id: 'oil', name: 'Engine oil & filter', every: 7500, cost: [45, 95], diy: 'Easy' },
+      { id: 'rot', name: 'Tire rotation', every: 7500, cost: [0, 30], diy: 'Easy' },
+      { id: 'insp', name: 'Multi-point inspection', every: 15000, cost: [0, 40], diy: 'Easy' },
+      { id: 'cab', name: 'Cabin air filter', every: 20000, cost: [18, 45], diy: 'Easy' },
+      { id: 'air', name: 'Engine air filter', every: 30000, cost: [25, 60], diy: 'Easy' },
+      { id: 'bf', name: 'Brake fluid', every: 45000, cost: [90, 150], diy: 'Medium' },
+      { id: 'trans', name: 'Transmission fluid', every: 60000, cost: [150, 320], diy: 'Hard' },
+      { id: 'pads', name: 'Brake pads & rotors', every: 50000, cost: [300, 650], diy: 'Medium' },
+      { id: 'tire', name: 'Tires — replace set', every: 50000, cost: [600, 950], diy: 'Hard' },
+      { id: 'batt', name: '12V battery', every: 60000, cost: [150, 250], diy: 'Easy' },
+      { id: 'cool', name: 'Engine coolant', every: 60000, cost: [110, 180], diy: 'Medium' },
+      { id: 'plug', name: 'Spark plugs', every: 100000, cost: [160, 320], diy: 'Hard' }
+    ]
+  };
+
+  static seed() {
+    const done = {};
+    const mark = (id, from, to, step) => { for (let m = from; m <= to; m += step) done[id + '@' + m] = { at: m }; };
+    mark('oil', 7500, 75000, 7500);
+    mark('rot', 7500, 75000, 7500);
+    mark('insp', 15000, 75000, 15000);
+    mark('cab', 15000, 75000, 15000);
+    mark('air', 30000, 60000, 30000);
+    done['cvt@30000'] = { at: 31200 };
+    done['bf@45000'] = { at: 46100 };
+    done['pads@50000'] = { at: 51800 };
+    done['tire@50000'] = { at: 52000 };
+    done['belt@60000'] = { at: 60400 };
+    done['batt@60000'] = { at: 61900 };
+    const accord = {
+      id: 'v1', year: 2018, make: 'Honda', model: 'Accord', engine: '1.5L Turbo (gas)',
+      nickname: 'Daily', miles: 80000, done,
+      custom: [
+        { id: 'c1', name: 'Rear brake caliper rebuild', mileage: 68432, cost: 180, note: 'Seized slide pins, new seals + fluid flush' },
+        { id: 'c2', name: 'Transmission drain & fill (early)', mileage: 55100, cost: 145, note: 'Extra HCF-2 change ahead of schedule' }
+      ]
+    };
+    const rav4 = {
+      id: 'v2', year: 2020, make: 'Toyota', model: 'RAV4', engine: '2.5L (gas)',
+      nickname: 'Weekend', miles: 34120, custom: [],
+      done: { 'oil@10000': { at: 10000 }, 'oil@20000': { at: 20500 }, 'oil@30000': { at: 30200 }, 'rot@5000': { at: 5000 }, 'rot@10000': { at: 10000 }, 'rot@15000': { at: 15300 }, 'rot@20000': { at: 20500 }, 'rot@25000': { at: 25100 }, 'rot@30000': { at: 30200 }, 'insp@15000': { at: 15300 }, 'insp@30000': { at: 30200 }, 'cab@15000': { at: 15300 }, 'cab@30000': { at: 30200 } }
+    };
+    return [accord, rav4];
+  }
+
+  state = { vehicles: null, activeId: null, view: 'dash', filter: 'all', dialog: null, open: {}, saveTick: 0, f: null, c: { name: '', mileage: '', cost: '', note: '' } };
+
+  componentDidMount() {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem('odograph.v1') || 'null'); } catch (e) {}
+    const vehicles = s && s.vehicles ? s.vehicles : Component.seed();
+    this.setState({ vehicles, activeId: (s && s.activeId) || (vehicles[0] && vehicles[0].id) || null, f: this.blankForm() });
+  }
+
+  blankForm() { return { year: 2020, make: 'Honda', model: 'Accord', engine: '1.5L Turbo (gas)', miles: '', nickname: '' }; }
+
+  persist(vehicles, activeId) {
+    const next = { vehicles, activeId: activeId === undefined ? this.state.activeId : activeId };
+    this.setState(next);
+    try { localStorage.setItem('odograph.v1', JSON.stringify(next)); } catch (e) {}
+  }
+
+  active() { return (this.state.vehicles || []).find(v => v.id === this.state.activeId) || null; }
+  updateActive(fn) {
+    const vehicles = this.state.vehicles.map(v => (v.id === this.state.activeId ? fn(Object.assign({}, v)) : v));
+    this.persist(vehicles);
+  }
+
+  schedFor(v) { return Component.SCHED[v.make + '|' + v.model + '|' + v.engine] || Component.SCHED.generic; }
+  horizon() { return this.props.horizon ?? 200000; }
+  window_() { return this.props.dueWindow ?? 3000; }
+
+  occurrences(v) {
+    const out = [], H = this.horizon();
+    this.schedFor(v).forEach(d => {
+      const first = d.first || d.every;
+      if (!d.every) { out.push({ key: d.id + '@' + first, name: d.name, mileage: first, cost: d.cost, diy: d.diy, note: d.note }); return; }
+      for (let m = first; m <= H; m += d.every) out.push({ key: d.id + '@' + m, name: d.name, mileage: m, cost: d.cost, diy: d.diy, note: d.note });
+    });
+    return out.sort((a, b) => a.mileage - b.mileage || a.name.localeCompare(b.name));
+  }
+
+  fmtMi(n) { return Number(n || 0).toLocaleString('en-US'); }
+  fmtCost(lo, hi) {
+    if (!lo && !hi) return 'No cost';
+    if (lo === hi) return '$' + lo.toLocaleString('en-US');
+    return '$' + lo.toLocaleString('en-US') + '–' + hi.toLocaleString('en-US');
+  }
+  statusOf(o, v) {
+    if (v.done && v.done[o.key]) return 'done';
+    if (o.mileage <= v.miles) return 'over';
+    if (o.mileage <= v.miles + this.window_()) return 'due';
+    return 'up';
+  }
+  meta(st) {
+    return {
+      done: { label: 'Complete', tag: 'tag-neutral', dot: 'var(--color-neutral-700)', mark: 'var(--color-neutral-800)' },
+      over: { label: 'Overdue', tag: 'tag-accent', dot: 'var(--color-accent)', mark: 'var(--color-accent)' },
+      due: { label: 'Due soon', tag: 'tag-outline', dot: 'var(--color-accent-400)', mark: 'var(--color-accent-700)' },
+      up: { label: 'Upcoming', tag: 'tag-neutral', dot: 'var(--color-neutral-800)', mark: 'transparent' }
+    }[st];
+  }
+
+  toggleItem(key) {
+    this.updateActive(v => {
+      const done = Object.assign({}, v.done);
+      if (done[key]) delete done[key]; else done[key] = { at: v.miles };
+      v.done = done; return v;
+    });
+  }
+  markKeys(keys) {
+    this.updateActive(v => {
+      const done = Object.assign({}, v.done);
+      keys.forEach(k => { if (!done[k]) done[k] = { at: v.miles }; });
+      v.done = done; return v;
+    });
+  }
+
+  itemVM(o, v) {
+    const st = this.statusOf(o, v), m = this.meta(st);
+    return {
+      key: o.key, name: o.name, note: o.note || '', diy: o.diy || '—',
+      done: st === 'done', statusLabel: m.label, tagCls: m.tag,
+      mileLabel: this.fmtMi(o.mileage) + ' mi',
+      costLabel: this.fmtCost(o.cost[0], o.cost[1]),
+      op: st === 'done' ? 0.5 : 1, deco: st === 'done' ? 'line-through' : 'none',
+      rowBg: st === 'over' ? 'color-mix(in srgb, var(--color-accent) 8%, transparent)' : 'transparent',
+      toggle: () => this.toggleItem(o.key)
+    };
+  }
+
+  renderVals() {
+    const V = this.state.vehicles, v = this.active();
+    const f = this.state.f || this.blankForm();
+    const makes = Object.keys(Component.CATALOG);
+    const models = Object.keys(Component.CATALOG[f.make] || {});
+    const engines = (Component.CATALOG[f.make] || {})[f.model] || ['Gas'];
+    const years = []; for (let y = 2026; y >= 2000; y--) years.push(y);
+    const setF = (k, val) => {
+      const nf = Object.assign({}, f, { [k]: val });
+      if (k === 'make') { nf.model = Object.keys(Component.CATALOG[val])[0]; nf.engine = Component.CATALOG[val][nf.model][0]; }
+      if (k === 'model') { nf.engine = (Component.CATALOG[nf.make][val] || ['Gas'])[0]; }
+      this.setState({ f: nf });
+    };
+    const setC = (k, val) => this.setState({ c: Object.assign({}, this.state.c, { [k]: val }) });
+    const base = {
+      empty: !!V && !v, ready: !!v,
+      years, makes, models, engines, f,
+      setYear: e => setF('year', Number(e.target.value)),
+      setMake: e => setF('make', e.target.value),
+      setModel: e => setF('model', e.target.value),
+      setEngine: e => setF('engine', e.target.value),
+      setFMiles: e => setF('miles', e.target.value.replace(/[^0-9]/g, '')),
+      setNick: e => setF('nick' + 'name', e.target.value),
+      c: this.state.c,
+      setCName: e => setC('name', e.target.value),
+      setCMiles: e => setC('mileage', e.target.value.replace(/[^0-9]/g, '')),
+      setCCost: e => setC('cost', e.target.value.replace(/[^0-9]/g, '')),
+      setCNote: e => setC('note', e.target.value),
+      showCustom: this.state.dialog === 'custom',
+      showGarage: this.state.dialog === 'garage',
+      closeDialog: () => this.setState({ dialog: null }),
+      openCustom: () => this.setState({ dialog: 'custom', c: { name: '', mileage: v ? String(v.miles) : '', cost: '', note: '' } }),
+      openGarage: () => this.setState({ dialog: 'garage' }),
+      loadDemo: () => this.persist(Component.seed(), 'v1'),
+      resetAll: () => { try { localStorage.removeItem('odograph.v1'); } catch (e) {} this.setState({ vehicles: [], activeId: null, dialog: null }); },
+      createVehicle: () => {
+        const id = 'v' + Date.now();
+        const nv = { id, year: f.year, make: f.make, model: f.model, engine: f.engine, nickname: f.nickname, miles: Number(f.miles || 0), done: {}, custom: [] };
+        this.persist([...(V || []), nv], id);
+        this.setState({ dialog: null, f: this.blankForm() });
+      },
+      addCustom: () => {
+        const c = this.state.c;
+        if (!c.name) return;
+        this.updateActive(x => {
+          x.custom = [...(x.custom || []), { id: 'c' + Date.now(), name: c.name, mileage: Number(c.mileage || 0), cost: Number(c.cost || 0), note: c.note }];
+          return x;
+        });
+        this.setState({ dialog: null, c: { name: '', mileage: '', cost: '', note: '' } });
+      }
+    };
+    if (!v) return base;
+
+    const occ = this.occurrences(v);
+    const counts = { over: [], due: [], done: [], up: [] };
+    occ.forEach(o => counts[this.statusOf(o, v)].push(o));
+    const sum = list => list.reduce((a, o) => [a[0] + o.cost[0], a[1] + o.cost[1]], [0, 0]);
+    const overC = sum(counts.over), dueC = sum(counts.due);
+    const nextUp = occ.find(o => o.mileage > v.miles);
+    const filter = this.state.filter;
+    const keep = o => filter === 'all' || filter === this.statusOf(o, v);
+
+    const byMile = {};
+    occ.forEach(o => { if (keep(o)) (byMile[o.mileage] = byMile[o.mileage] || []).push(o); });
+    const groups = Object.keys(byMile).map(Number).sort((a, b) => a - b).map(mi => {
+      const list = byMile[mi];
+      const sts = list.map(o => this.statusOf(o, v));
+      const gst = sts.every(s => s === 'done') ? 'done' : sts.includes('over') ? 'over' : sts.includes('due') ? 'due' : 'up';
+      const m = this.meta(gst);
+      const c = sum(list);
+      const openDefault = gst !== 'done';
+      const open = this.state.open[mi] === undefined ? openDefault : this.state.open[mi];
+      const remaining = list.filter((o, i) => sts[i] !== 'done');
+      return {
+        mileage: mi, mileLabel: this.fmtMi(mi) + ' mi', statusLabel: m.label, tagCls: m.tag,
+        mark: gst === 'done' ? 'var(--color-accent-700)' : m.mark,
+        done: gst === 'done', notDone: gst !== 'done',
+        mileColor: gst === 'done' ? 'var(--color-accent-300)' : 'var(--color-text)',
+        bg: gst === 'over' ? 'color-mix(in srgb, var(--color-accent) 6%, var(--color-surface))'
+          : gst === 'done' ? 'color-mix(in srgb, var(--color-accent) 5%, var(--color-surface))' : 'var(--color-surface)',
+        summary: list.length + (list.length === 1 ? ' service' : ' services') + ' · ' + (list.length - remaining.length) + ' done',
+        costLabel: this.fmtCost(c[0], c[1]),
+        caret: open ? 'ph-caret-down' : 'ph-caret-right',
+        open, items: list.map(o => this.itemVM(o, v)),
+        markLabel: remaining.length ? 'Mark ' + remaining.length : 'Done',
+        toggle: () => this.setState({ open: Object.assign({}, this.state.open, { [mi]: !open }) }),
+        markAll: e => { e.stopPropagation(); this.markKeys(remaining.map(o => o.key)); }
+      };
+    });
+
+    const attention = [...counts.over, ...counts.due].map(o => this.itemVM(o, v));
+    const nodes = [];
+    let placed = false;
+    groups.forEach(g => {
+      if (!placed && g.mileage > v.miles) { nodes.push({ now: true, isGroup: false, mileLabel: '', color: 'var(--color-accent)', dot: 'var(--color-accent)' }); placed = true; }
+      nodes.push({
+        now: false, isGroup: true, mileLabel: g.mileLabel, statusLabel: g.statusLabel, tagCls: g.tagCls,
+        costLabel: g.costLabel, items: g.items, dot: g.mark === 'transparent' ? 'var(--color-neutral-800)' : g.mark,
+        color: g.statusLabel === 'Upcoming' ? 'color-mix(in srgb, var(--color-text) 55%, transparent)' : 'var(--color-text)'
+      });
+    });
+
+    const logRows = [
+      ...occ.filter(o => this.statusOf(o, v) === 'done').map(o => ({
+        mileLabel: this.fmtMi((v.done[o.key] && v.done[o.key].at) || o.mileage) + ' mi', name: o.name, note: o.note || '',
+        src: 'Schedule', srcCls: 'tag-neutral', costLabel: this.fmtCost(o.cost[0], o.cost[1]),
+        undoLabel: 'Undo', undo: () => this.toggleItem(o.key), sort: (v.done[o.key] && v.done[o.key].at) || o.mileage
+      })),
+      ...(v.custom || []).map(c => ({
+        mileLabel: this.fmtMi(c.mileage) + ' mi', name: c.name, note: c.note || '',
+        src: 'Custom', srcCls: 'tag-outline', costLabel: c.cost ? '$' + c.cost.toLocaleString('en-US') : '—',
+        undoLabel: 'Remove', sort: c.mileage,
+        undo: () => this.updateActive(x => { x.custom = x.custom.filter(y => y.id !== c.id); return x; })
+      }))
+    ].sort((a, b) => b.sort - a.sort);
+
+    const filters = [
+      { id: 'all', label: 'All' }, { id: 'over', label: 'Overdue ' + counts.over.length },
+      { id: 'due', label: 'Due soon ' + counts.due.length }, { id: 'up', label: 'Upcoming' },
+      { id: 'done', label: 'Complete ' + counts.done.length }
+    ].map(x => ({ label: x.label, cls: filter === x.id ? 'tag-accent' : 'tag-neutral', pick: () => this.setState({ filter: x.id }) }));
+
+    const anyClosed = groups.some(g => !g.open);
+    const pct = Math.min(100, Math.round((v.miles / this.horizon()) * 100));
+    return Object.assign(base, {
+      v: {
+        label: v.nickname || v.model,
+        title: v.year + ' ' + v.make + ' ' + v.model,
+        sub: v.engine + (v.nickname ? ' · ' + v.nickname : ''),
+        miles: v.miles
+      },
+      milesInput: String(v.miles), milesLabel: this.fmtMi(v.miles),
+      setMiles: e => { const n = Number(e.target.value.replace(/[^0-9]/g, '') || 0); this.updateActive(x => { x.miles = n; return x; }); },
+      pct, pctLabel: pct + '%',
+      s: {
+        overCount: counts.over.length, overCost: this.fmtCost(overC[0], overC[1]),
+        dueCount: counts.due.length, dueCost: this.fmtCost(dueC[0], dueC[1]),
+        nextMile: nextUp ? this.fmtMi(nextUp.mileage) : '—',
+        nextIn: nextUp ? this.fmtMi(nextUp.mileage - v.miles) + ' mi away' : 'Plan complete',
+        doneCount: counts.done.length + (v.custom || []).length,
+        customCount: (v.custom || []).length,
+        attnLabel: counts.over.length + ' overdue, ' + counts.due.length + ' coming up'
+      },
+      isDash: this.state.view === 'dash', isTime: this.state.view === 'timeline', isLog: this.state.view === 'log',
+      viewDash: () => this.setState({ view: 'dash' }), viewTime: () => this.setState({ view: 'timeline' }), viewLog: () => this.setState({ view: 'log' }),
+      filters, groups, groupsLabel: groups.length + ' mileage points to ' + this.fmtMi(this.horizon()),
+      attention, hasAttention: attention.length > 0,
+      markAttention: () => this.markKeys([...counts.over, ...counts.due].map(o => o.key)),
+      nodes, logRows,
+      expandLabel: anyClosed ? 'Expand all' : 'Collapse all',
+      toggleAll: () => {
+        const open = {};
+        groups.forEach(g => { open[g.mileage] = anyClosed; });
+        this.setState({ open });
+      },
+      saveLabel: this.state.saveTick ? 'Saved' : 'Save',
+      save: () => { this.persist(this.state.vehicles); this.setState({ saveTick: 1 }); setTimeout(() => this.setState({ saveTick: 0 }), 1600); },
+      garage: (V || []).map(x => ({
+        title: x.year + ' ' + x.make + ' ' + x.model,
+        sub: x.engine + ' · ' + this.fmtMi(x.miles) + ' mi',
+        tag: x.id === v.id ? 'Active' : (x.nickname || 'Saved'), tagCls: x.id === v.id ? 'tag-accent' : 'tag-neutral',
+        ring: x.id === v.id ? 'var(--color-accent)' : 'var(--color-divider)',
+        icon: x.id === v.id ? 'var(--color-accent)' : 'var(--color-neutral-600)',
+        pick: () => this.persist(this.state.vehicles, x.id),
+        remove: e => { e.stopPropagation(); const rest = this.state.vehicles.filter(y => y.id !== x.id); this.persist(rest, rest[0] ? rest[0].id : null); }
+      }))
+    });
+  }
+}
+
+</script>
+</body>
+</html>
