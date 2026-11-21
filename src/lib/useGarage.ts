@@ -16,9 +16,11 @@ interface GarageState {
 export function useGarage() {
   const [state, setState] = useState<GarageState>({ vehicles: null, activeId: null });
 
+  // A first visit starts empty, at the vehicle picker. The demo garage is
+  // opt-in via "Load the demo" on that screen.
   useEffect(() => {
     const saved = storage.load();
-    const vehicles = saved?.vehicles ?? seedVehicles();
+    const vehicles = saved?.vehicles ?? [];
     setState({ vehicles, activeId: saved?.activeId ?? vehicles[0]?.id ?? null });
   }, []);
 

@@ -13,7 +13,7 @@ hotlinked. Tests are Vitest, over the derivation layer only.
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 22 unit tests over the schedule/plan logic
+npm test         # 50 unit tests: schedule/plan logic, catalog, form cascade
 npm run build    # tsc -b && vite build
 ```
 
@@ -23,11 +23,11 @@ npm run build    # tsc -b && vite build
 | --- | --- |
 | `styles.css` | The Nocturne token sheet, unchanged and imported as-is. Source of truth for every color, font, spacing, radius, and shadow. |
 | `src/app.css` | The only app-level CSS: the page gradient, two column widths, and the hover states the prototype expressed inline. No media queries. |
-| `src/data/` | Catalog, schedules, demo seed — the two things a real app needs to source properly. |
+| `src/data/` | Catalog, schedules, demo seed — the two things a real app needs to source properly. The catalog is year-aware: 2017–2026, models and engines per generation. |
 | `src/lib/schedule.ts` | Pure derivation: occurrence generation, `statusOf`, grouping status, cost sums. |
 | `src/lib/plan.ts` | Pure view-model builders: mileage groups, timeline nodes, log rows, and the status → tag/mark/tint treatment table. |
 | `src/lib/useGarage.ts` | The vehicle store. Every mutation persists; the Save button re-persists and flips its label for 1600 ms. |
-| `src/lib/useVehicleForm.ts` | The shared create-a-vehicle form, including the make → model → engine cascade. |
+| `src/lib/useVehicleForm.ts` | The shared create-a-vehicle form, including the year → make → model → engine cascade. |
 | `src/components/` | One file per region of the design. |
 
 State that is derived — occurrences, statuses, counts, cost sums, groups,
@@ -49,6 +49,18 @@ so editing the odometer recomputes everything.
 - **Derived labels.** The prototype hard-codes "Due within 3,000 mi" and "200k"
   in the progress row. Both are derived from the `dueWindow` and `horizon` props
   here, so changing them stays consistent.
+- **First visits start empty.** The handoff seeds the demo garage when nothing
+  is saved; this build opens on the vehicle picker instead, with the demo one
+  click away ("Load the demo 2018 Accord"). The storage key moved to
+  `odograph.v2`, and `v1` data is deleted on load — it was almost all
+  auto-seeded demo.
+- **Catalog.** Expanded from the prototype's 13 models to 34: the five
+  best-selling US brands of 2025 (Toyota, Ford, Chevrolet, Honda, Hyundai)
+  with their top sedans and SUVs, plus the Focus, F-150, Odyssey, Sienna and
+  Sonata, plus the original Subaru and Mazda models. Years are 2017–2026, and
+  each model only offers the years and engines it was actually sold with.
+  Only the Accord 1.5L Turbo and the RAV4 2.5L (gas) have detailed schedules;
+  everything else uses the generic one.
 - **Escape closes a dialog**, and clicking the backdrop does too. Not in the
   handoff; standard dialog behavior.
 

@@ -1,4 +1,4 @@
-import { STORAGE_KEY } from '../config';
+import { RETIRED_STORAGE_KEYS, STORAGE_KEY } from '../config';
 import type { Vehicle } from '../types';
 
 export interface Persisted {
@@ -12,6 +12,7 @@ export interface Persisted {
  */
 export function load(): Persisted | null {
   try {
+    for (const key of RETIRED_STORAGE_KEYS) localStorage.removeItem(key);
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Persisted | null;
