@@ -117,7 +117,6 @@ export function useGarage() {
     setState({ vehicles: [], activeId: null });
   }, []);
 
-  // Opens on the RAV4 (v2); the Accord is the second car in the demo garage.
   const loadDemo = useCallback(() => persist(seedVehicles(), 'v2'), [persist]);
 
   /** Re-persist the current state — what the Save button does. */

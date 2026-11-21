@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyFormChange, blankForm } from '../lib/useVehicleForm';
 import { CATALOG, FIRST_YEAR, LAST_YEAR, YEARS, enginesFor, makesFor, modelsFor } from './catalog';
 import { SCHEDULES } from './schedules';
+import { accordFixture } from '../lib/__fixtures__/accord';
 import { seedVehicles } from './seed';
 
 describe('catalog coverage', () => {
@@ -89,7 +90,7 @@ describe('year-aware lookups', () => {
 
 describe('the catalog and the rest of the app agree', () => {
   it('offers the demo vehicles exactly as seeded', () => {
-    for (const v of seedVehicles()) {
+    for (const v of [...seedVehicles(), accordFixture()]) {
       expect(enginesFor(v.make, v.model, v.year), `${v.year} ${v.make} ${v.model}`).toContain(v.engine);
     }
   });

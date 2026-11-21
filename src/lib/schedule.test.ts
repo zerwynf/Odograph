@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { seedVehicles } from '../data/seed';
+import { accordFixture } from './__fixtures__/accord';
 import { scheduleFor } from '../data/schedules';
 import type { Occurrence, Vehicle } from '../types';
 import { buildGroups, buildLog, buildTimeline } from './plan';
@@ -8,7 +9,7 @@ import { bucketByStatus, groupStatus, nextMilestone, occurrencesFor, occurrences
 const HORIZON = 200000;
 const WINDOW = 3000;
 
-const accord = () => seedVehicles().find((v) => v.id === 'v1')!;
+const accord = accordFixture;
 const rav4 = () => seedVehicles().find((v) => v.id === 'v2')!;
 
 describe('occurrence generation', () => {
@@ -85,8 +86,8 @@ describe('the default demo vehicle (2020 RAV4) shows all four states', () => {
   const v = rav4();
   const buckets = bucketByStatus(occurrencesFor(v, HORIZON), v, WINDOW);
 
-  it('comes first in the demo garage', () => {
-    expect(seedVehicles()[0].id).toBe('v2');
+  it('is the only car in the demo garage', () => {
+    expect(seedVehicles().map((x) => x.id)).toEqual(['v2']);
     expect([v.year, v.make, v.model, v.engine]).toEqual([2020, 'Toyota', 'RAV4', '2.5L (gas)']);
   });
 
@@ -98,7 +99,7 @@ describe('the default demo vehicle (2020 RAV4) shows all four states', () => {
   });
 });
 
-describe('the Accord demo vehicle shows all four states', () => {
+describe('the Accord fixture shows all four states', () => {
   const v = accord();
   const occ = occurrencesFor(v, HORIZON);
   const buckets = bucketByStatus(occ, v, WINDOW);

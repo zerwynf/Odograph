@@ -1,44 +1,11 @@
-import type { DoneRecord, Vehicle } from '../types';
+import type { Vehicle } from '../types';
 
 /**
- * Demo garage. The 2020 RAV4 at 34,120 mi comes first and opens as the active
- * vehicle: it leaves the engine air filter @30,000 overdue, with tire rotation
- * due at 35,000, so the dashboard shows all four states on load. The 2018 Accord
- * at 80,000 mi is the busier second car — overdue CVT fluid and A/C service,
- * plus custom log entries — and demonstrates the garage.
+ * Demo garage: one 2020 RAV4 at 34,120 mi. It leaves the engine air filter
+ * @30,000 overdue, with tire rotation due at 35,000, so the dashboard shows all
+ * four states on load.
  */
 export function seedVehicles(): Vehicle[] {
-  const done: Record<string, DoneRecord> = {};
-  const mark = (id: string, from: number, to: number, step: number) => {
-    for (let m = from; m <= to; m += step) done[`${id}@${m}`] = { at: m };
-  };
-  mark('oil', 7500, 75000, 7500);
-  mark('rot', 7500, 75000, 7500);
-  mark('insp', 15000, 75000, 15000);
-  mark('cab', 15000, 75000, 15000);
-  mark('air', 30000, 60000, 30000);
-  done['cvt@30000'] = { at: 31200 };
-  done['bf@45000'] = { at: 46100 };
-  done['pads@50000'] = { at: 51800 };
-  done['tire@50000'] = { at: 52000 };
-  done['belt@60000'] = { at: 60400 };
-  done['batt@60000'] = { at: 61900 };
-
-  const accord: Vehicle = {
-    id: 'v1',
-    year: 2018,
-    make: 'Honda',
-    model: 'Accord',
-    engine: '1.5L Turbo (gas)',
-    nickname: 'Daily',
-    miles: 80000,
-    done,
-    custom: [
-      { id: 'c1', name: 'Rear brake caliper rebuild', mileage: 68432, cost: 180, note: 'Seized slide pins, new seals + fluid flush' },
-      { id: 'c2', name: 'Transmission drain & fill (early)', mileage: 55100, cost: 145, note: 'Extra HCF-2 change ahead of schedule' },
-    ],
-  };
-
   const rav4: Vehicle = {
     id: 'v2',
     year: 2020,
@@ -57,5 +24,5 @@ export function seedVehicles(): Vehicle[] {
     },
   };
 
-  return [rav4, accord];
+  return [rav4];
 }
