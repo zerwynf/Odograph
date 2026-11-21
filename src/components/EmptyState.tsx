@@ -79,7 +79,7 @@ export function EmptyState({ form, onCreate, onLoadDemo }: EmptyStateProps) {
             Build my schedule
           </button>
           <button className="btn btn-ghost" onClick={onLoadDemo}>
-            Load the demo 2018 Accord
+            Load the demo 2020 RAV4
           </button>
         </div>
       </div>

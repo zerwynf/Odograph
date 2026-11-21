@@ -1,10 +1,11 @@
 import type { DoneRecord, Vehicle } from '../types';
 
 /**
- * Demo garage: a 2018 Accord at 80,000 mi that deliberately leaves CVT fluid
- * @60,000 and A/C service @75,000 overdue, with oil and rotation due at 82,500 —
- * so the dashboard shows all four states on load. The RAV4 exists to demonstrate
- * the garage.
+ * Demo garage. The 2020 RAV4 at 34,120 mi comes first and opens as the active
+ * vehicle: it leaves the engine air filter @30,000 overdue, with tire rotation
+ * due at 35,000, so the dashboard shows all four states on load. The 2018 Accord
+ * at 80,000 mi is the busier second car — overdue CVT fluid and A/C service,
+ * plus custom log entries — and demonstrates the garage.
  */
 export function seedVehicles(): Vehicle[] {
   const done: Record<string, DoneRecord> = {};
@@ -56,5 +57,5 @@ export function seedVehicles(): Vehicle[] {
     },
   };
 
-  return [accord, rav4];
+  return [rav4, accord];
 }

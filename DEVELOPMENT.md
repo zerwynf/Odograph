@@ -51,7 +51,8 @@ so editing the odometer recomputes everything.
   here, so changing them stays consistent.
 - **First visits start empty.** The handoff seeds the demo garage when nothing
   is saved; this build opens on the vehicle picker instead, with the demo one
-  click away ("Load the demo 2018 Accord"). The storage key moved to
+  click away ("Load the demo 2020 RAV4", which also adds the
+  2018 Accord as a second car). The storage key moved to
   `odograph.v2`, and `v1` data is deleted on load — it was almost all
   auto-seeded demo.
 - **Catalog.** Expanded from the prototype's 13 models to 34: the five

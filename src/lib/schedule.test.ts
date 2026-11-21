@@ -8,7 +8,8 @@ import { bucketByStatus, groupStatus, nextMilestone, occurrencesFor, occurrences
 const HORIZON = 200000;
 const WINDOW = 3000;
 
-const accord = () => seedVehicles()[0];
+const accord = () => seedVehicles().find((v) => v.id === 'v1')!;
+const rav4 = () => seedVehicles().find((v) => v.id === 'v2')!;
 
 describe('occurrence generation', () => {
   it('emits every interval up to and including the horizon', () => {
@@ -80,7 +81,24 @@ describe('statusOf', () => {
   });
 });
 
-describe('the demo vehicle shows all four states', () => {
+describe('the default demo vehicle (2020 RAV4) shows all four states', () => {
+  const v = rav4();
+  const buckets = bucketByStatus(occurrencesFor(v, HORIZON), v, WINDOW);
+
+  it('comes first in the demo garage', () => {
+    expect(seedVehicles()[0].id).toBe('v2');
+    expect([v.year, v.make, v.model, v.engine]).toEqual([2020, 'Toyota', 'RAV4', '2.5L (gas)']);
+  });
+
+  it('has the air filter @30,000 overdue and rotation due at 35,000', () => {
+    expect(buckets.over.map((o) => o.key)).toEqual(['air@30000']);
+    expect(buckets.due.map((o) => o.key)).toEqual(['rot@35000']);
+    expect(buckets.done.length).toBeGreaterThan(0);
+    expect(buckets.up.length).toBeGreaterThan(0);
+  });
+});
+
+describe('the Accord demo vehicle shows all four states', () => {
   const v = accord();
   const occ = occurrencesFor(v, HORIZON);
   const buckets = bucketByStatus(occ, v, WINDOW);
